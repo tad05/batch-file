@@ -24,6 +24,7 @@ import TagInput from './TagInput';
 import TokenInputPopup from './TokenInputPopup';
 import TaskPhase from '../constants/taskPhases';
 import { setTaskInfo, setUseMultiTaskMode } from '../features/tasks/taskSlice';
+import { useCombobox } from "downshift";
 
 const EpisodePanel = () => {
   const dispatch = useDispatch();
@@ -191,8 +192,6 @@ const EpisodePanel = () => {
     return () => clearInterval(timer);
   }, [lastTaskStatusUpdate, isTaskStatusPaused]);
 
-  const classLabel = clsx('text-sm', 'text-gray-600', 'w-28', 'flex-shrink-0', 'font-medium');
-
   const classEpisodePanel = clsx(
     'bg-white',
     'border',
@@ -201,239 +200,21 @@ const EpisodePanel = () => {
     'shadow-md',
     'p-4',
     'w-full',
-    'max-w-[350px]',
+    'max-w-[300px]',
     'relative',
     'overflow-y-auto',
     'scrollbar-thin'
   );
-
-
-  const classSelect = clsx(
-    'text-sm',
-    'w-full',
-    'h-8',
-    'px-2',
-    'border',
-    'border-gray-300',
-    'rounded-md',
-    'focus:outline-none',
-    'focus:ring-2',
-    'focus:ring-blue-500',
-    'focus:border-transparent',
-    {
-      'bg-gray-100 cursor-not-allowed': !isEditable,
-      'bg-white': isEditable,
-    }
-  );
-
-  const classCheckbox = clsx(
-    'w-4',
-    'h-4',
-    'text-blue-600',
-    'bg-gray-100',
-    'border-gray-300',
-    'rounded',
-    'focus:ring-blue-500',
-    'focus:ring-2',
-    {
-      'cursor-not-allowed opacity-50': !isEditable,
-      'cursor-pointer': isEditable,
-    }
-  );
-
-  // Common button base styles
-  const classButtonBase = clsx(
-    'px-3',
-    'py-1',
-    'text-s',
-    'font-medium',
-    'rounded-xl',
-    'transition-colors'
-  );
-
-  // Button variants
-  const getButtonVariant = (variant, isActive = true, isLoading = false) => {
-    const variants = {
-      blue: {
-        active: 'bg-blue-200 text-blue-800 hover:bg-blue-300',
-        disabled: 'bg-gray-200 text-gray-500 cursor-not-allowed',
-      },
-      red: {
-        active: 'bg-red-200 text-red-800 hover:bg-red-300',
-        disabled: 'bg-gray-200 text-gray-500 cursor-not-allowed',
-      },
-      green: {
-        active: 'bg-green-200 text-green-800 hover:bg-green-300',
-        disabled: 'bg-gray-200 text-gray-500 cursor-not-allowed',
-      },
-    };
-
-    const isDisabled = !isActive || isLoading;
-    return variants[variant]?.[isDisabled ? 'disabled' : 'active'] || '';
-  };
 
   return (
     <div className={classEpisodePanel}>
       <div className={clsx('text-lg', 'font-semibold', 'mb-3', 'text-gray-800')}>
         EPISODE
       </div>
-
-      
-
       <div className={clsx('flex', 'items-start', 'mb-2.5')}>
-        
-
-        
+ 
       </div>
 
-      <div className={clsx('flex', 'items-center', 'mb-2')}>
-        <span className={classLabel}>Push to Hub</span>
-        <div className={clsx('flex', 'items-center')}>
-          <input
-            className={classCheckbox}
-            type="checkbox"
-            checked={!!info.pushToHub}
-            onChange={(e) => handleChange('pushToHub', e.target.checked)}
-            disabled={!isEditable}
-          />
-          <span className={clsx('ml-2', 'text-sm', 'text-gray-500')}>
-            {info.pushToHub ? 'Enabled' : 'Disabled'}
-          </span>
-        </div>
-      </div>
-
-      {info.pushToHub && (
-        <div className={clsx('flex', 'items-center', 'mb-2')}>
-          <div className={clsx('flex', 'items-center')}>
-            <input
-              className={classCheckbox}
-              type="checkbox"
-              checked={!!info.privateMode}
-              onChange={(e) => handleChange('privateMode', e.target.checked)}
-              disabled={!isEditable}
-            />
-            <span className={clsx('ml-2', 'text-sm', 'text-gray-500')}>
-              {info.privateMode ? 'Enabled' : 'Disabled'}
-            </span>
-          </div>
-        </div>
-      )}
-
-      <div className={clsx('flex', 'items-start', 'mb-2.5')}>
-        <span
-          className={clsx(
-            'text-sm',
-            'text-gray-600',
-            'w-28',
-            'flex-shrink-0',
-            'font-medium',
-            'pt-2'
-          )}
-        >
-          User ID
-        </span>
-
-        <div className="flex-1 min-w-0">
-          {/* Common Load button for both modes */}
-          <div className="flex gap-2 mb-2">
-            <button
-              className={clsx(classButtonBase, getButtonVariant('blue', isEditable, isLoading))}
-              onClick={() => {
-                if (isEditable && !isLoading) {
-                  handleLoadUserId();
-                }
-              }}
-              disabled={!isEditable || isLoading}
-            >
-              {isLoading ? 'Loading...' : 'Load'}
-            </button>
-            {!info.pushToHub && showUserIdDropdown && (
-              <button
-                className={clsx(classButtonBase, getButtonVariant('red', isEditable))}
-                onClick={() => setShowUserIdDropdown(false)}
-                disabled={!isEditable}
-              >
-                Manual Input
-              </button>
-            )}
-            {info.pushToHub && (
-              <button
-                className={clsx(classButtonBase, getButtonVariant('green', isEditable, isLoading))}
-                onClick={() => {
-                  if (isEditable && !isLoading) {
-                    setShowTokenPopup(true);
-                  }
-                }}
-                disabled={!isEditable || isLoading}
-              >
-                Change
-              </button>
-            )}
-          </div>
-
-          {info.pushToHub ? (
-            /* Dropdown selection only when Push to Hub is enabled */
-            <>
-              <select
-                className={classSelect}
-                value={info.userId || ''}
-                onChange={(e) => handleChange('userId', e.target.value)}
-                disabled={!isEditable}
-              >
-                <option value="">Select User ID</option>
-                {userIdList.map((userId) => (
-                  <option key={userId} value={userId}>
-                    {userId}
-                  </option>
-                ))}
-              </select>
-              <div className="text-xs text-gray-500 mt-1 leading-relaxed">
-                Select from registered User IDs (required for Hub upload)
-              </div>
-            </>
-          ) : (
-            /* Text input with optional registered ID selection when Push to Hub is disabled */
-            <>
-              
-            </>
-          )}
-        </div>
-      </div>
-
-      {showPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
-            <div className="mb-4 font-bold text-lg">Select Task Info</div>
-            <div className="grid grid-cols-2 gap-4">
-              {taskInfoList.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 border rounded cursor-pointer hover:bg-blue-100"
-                  onClick={() => handleSelect(item)}
-                >
-                  <div className="font-semibold">{item.taskName}</div>
-                  <div className="text-sm text-gray-600">{item.taskType}</div>
-                  <div className="text-xs text-gray-400">{item.repoId}</div>
-                </div>
-              ))}
-            </div>
-            <button
-              className="mt-6 px-4 py-2 bg-gray-400 text-white rounded"
-              onClick={() => setShowPopup(false)}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Token Input Popup */}
-      <TokenInputPopup
-        isOpen={showTokenPopup}
-        onClose={() => setShowTokenPopup(false)}
-        onSubmit={handleTokenSubmit}
-        isLoading={isLoading}
-      />
     </div>
   );
 };
